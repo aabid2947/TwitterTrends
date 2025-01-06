@@ -80,13 +80,13 @@ def setup_driver_with_proxy():
 
         chrome_options = Options()
         chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--window-size=1920,1080')
+        chrome_options.add_argument('--window-size=620,580')
         chrome_options.add_argument('--load-extension=.')
         chrome_options.add_argument('--disable-popup-blocking')
         chrome_options.add_argument('--disable-notifications')
         chrome_options.add_argument('--disable-infobars')
         chrome_options.add_argument('--disable-extensions')
-        chrome_options.add_argument('--headless')  # Run Chrome in headless mode
+        # chrome_options.add_argument('--headless')  # Run Chrome in headless mode
         
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
