@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 import os 
 from dotenv import load_dotenv
-import datetime
+from datetime import datetime
 import random
 import string
 # Load environment variables

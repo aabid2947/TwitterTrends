@@ -1,0 +1,6 @@
+Flask
+selenium
+pymongo
+python-dotenv
+requests
+webdriver-manager

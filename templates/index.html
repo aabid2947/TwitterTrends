@@ -3,55 +3,257 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trending Topics</title>
+  <title>Twitter Trending Topics Scraper</title>
   <style>
-    /* Optional: Style for hiding result initially */
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+      width: 70%; /* Increase width */
+      max-width: 600px; /* Set a maximum width */
+    }
+
+    .container:hover {
+      transform: translateY(-5px);
+    }
+
+    h2 {
+      color: #1da1f2;
+      margin-bottom: 20px;
+      text-align: center;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    button {
+      background-color: #1da1f2;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      cursor: pointer;
+      border-radius: 30px;
+      transition: all 0.3s ease;
+      font-size: 16px;
+      font-weight: bold;
+      display: block;
+      margin: 20px auto;
+      outline: none;
+    }
+
+    button:hover {
+      background-color: #0d8ddb;
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(29, 161, 242, 0.3);
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: bold;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      box-sizing: border-box;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      transition: border-color 0.3s ease;
+      font-size: 16px;
+    }
+
+    .form-group input:focus {
+      border-color: #1da1f2;
+      outline: none;
+    }
+
+    .error {
+      color: #e74c3c;
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+      animation: fadeIn 0.3s ease-out;
+    }
+
     #result {
       display: none;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    #trends-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #trends-list li {
+      background-color: #f8f9fa;
+      margin-bottom: 10px;
+      padding: 12px;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    #trends-list li:hover {
+      transform: translateX(5px);
+      background-color: #e9ecef;
+    }
+
+    #json-output {
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 15px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+    }
+
+    #back-button {
+      display: none;
+      background-color: #e74c3c;
+    }
+
+    #back-button:hover {
+      background-color: #c0392b;
     }
   </style>
 </head>
 <body>
-  <h1>Click here to run the script and get trending topics</h1>
-  <button id="run-script-btn">Run Script</button>
+  <div class="container">
+    <div id="login-form">
+      <h2>Twitter Login</h2>
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" required>
+      </div>
+      <button id="run-script-btn">Run Script</button>
+      <p id="error-message" class="error"></p>
+    </div>
 
-  <div id="result">
-    <h2>These are the most happening topics as on <span id="timestamp"></span></h2>
-    <ul id="trends-list">
-      <!-- Trends will be added here dynamically -->
-    </ul>
-    <p>The IP address used for this query was <span id="ip-address"></span>.</p>
-    <h3>Here’s a JSON extract of this record from the MongoDB:</h3>
-    <pre id="json-output"></pre>
+    <div id="result">
+      <h2>Top 5 Trending Topics as of <span id="timestamp"></span></h2>
+      <ul id="trends-list"></ul>
+      <p>IP address used: <span id="ip-address"></span></p>
+      <h3>MongoDB Record:</h3>
+      <pre id="json-output"></pre>
+      <button id="back-button">Back</button>
+    </div>
   </div>
 
   <script>
-    // Event listener for the button click
     document.getElementById('run-script-btn').addEventListener('click', async function() {
-      // Make the request to fetch the script result
-      const response = await fetch('/run-script');
-      const result = await response.json();
+      this.disabled = true;
+      this.textContent = 'Running...';
+      this.classList.add('loading');
+      document.getElementById('error-message').textContent = '';
 
-      console.log(result); // Log the result to the console
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
 
-      // Set timestamp and IP address
-      document.getElementById('timestamp').textContent = result.date_time;
-      document.getElementById('ip-address').textContent = result.ip_address;
+      try {
+        const response = await fetch('/run-script', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
 
-      // Add trends to the list dynamically
-      const trendsList = document.getElementById('trends-list');
-      result.trend.forEach(trend => {
-        console.log(trend);
-        const li = document.createElement('li');
-        li.textContent = trend;
-        trendsList.appendChild(li);
-      });
+        const data = await response.json();
+        if (response.ok) {
+          document.getElementById('login-form').style.display = 'none';
+          document.getElementById('result').style.display = 'block';
+          document.getElementById('timestamp').textContent = new Date().toLocaleString();
+          document.getElementById('ip-address').textContent = data.ip_address;
+          
+          const trendsList = document.getElementById('trends-list');
+          trendsList.innerHTML = '';
+          data.trend.forEach((trend, index) => {
+            const li = document.createElement('li');
+            li.textContent = trend;
+            li.style.animationDelay = `${index * 0.1}s`;
+            trendsList.appendChild(li);
+          });
+          
+          document.getElementById('json-output').textContent = JSON.stringify(data, null, 2);
+          document.getElementById('back-button').style.display = 'block';
+        } else {
+          document.getElementById('error-message').textContent = data.error;
+        }
+      } catch (error) {
+        console.log(error);
+        document.getElementById('error-message').textContent = 'An error occurred. Please try again.';
+      } finally {
+        this.disabled = false;
+        this.textContent = 'Run Script';
+        this.classList.remove('loading');
+      }
+    });
 
-      // Display the JSON of the record
-      document.getElementById('json-output').textContent = JSON.stringify(result.record_json, null, 2);
+    document.getElementById('back-button').addEventListener('click', function() {
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+      this.style.display = 'none';
+    });
 
-      // Show the result section
-      document.getElementById('result').style.display = 'block';
+    // Add subtle parallax effect
+    document.addEventListener('mousemove', (e) => {
+      const container = document.querySelector('.container');
+      const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+      const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+      container.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
     });
   </script>
 </body>

@@ -1,20 +1,15 @@
 import time
-import random
-import string
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
 import os
 from dotenv import load_dotenv
-from pymongo import MongoClient
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
-from proxymesh import setup_driver_with_proxy,login_to_twitter
-
+from controller.proxymesh import setup_driver_with_proxy,login_to_twitter
+from controller.MongodbCrud import store_trends_in_db,generate_unique_id
+import requests
+import json
 
 # Load environment variables
 load_dotenv()
@@ -26,11 +21,15 @@ MONGO_URI = os.getenv('MONGO_URI')
 DB_NAME = os.getenv('DB_NAME')
 
 
-
-# Create a function to generate a unique ID for each run
-def generate_unique_id():
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-
+# Function to get the public IP address of the system
+def get_public_ip():
+    try:
+        response = requests.get('https://api.ipify.org?format=json')
+        ip = response.json().get('ip')
+        return ip
+    except Exception as e:
+        print(f"Error fetching public IP: {e}")
+        return None
 
 
 
@@ -39,6 +38,7 @@ def fetch_trending_topics(driver):
     time.sleep(5)  # Allow time for the page to load
 
     try:
+        print(f"Fetching Top Trends...")
         # Wait for elements with the unique identifier `data-testid="cellInnerDiv"`
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, '//div[@data-testid="cellInnerDiv"]'))
@@ -50,69 +50,51 @@ def fetch_trending_topics(driver):
         for _ in range(retries):
             # Locate all trend items with `data-testid="cellInnerDiv"`
             trend_elements = driver.find_elements(By.XPATH, '//div[@data-testid="cellInnerDiv"]')
+    
 
             # Extract hashtags and post counts
             for trend in trend_elements:
+                if(len(trends)>=5): return trends
                 trend_text = trend.text.strip()
 
                 # Simplified extraction of hashtags and post counts
                 lines = trend_text.split('\n')
-                for i, line in enumerate(lines):
-                    if line.startswith('#') :
-                        trends.append(line)
+                print(lines[3])
+                # for i, line in enumerate(lines):
+                trends.append(lines[3])
 
             # Scroll to load more content
             driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
             time.sleep(3)  # Allow time for new trends to load
+            
 
      
 
-        print("Output saved to 'trending_topics.json'")
         return trends
 
     except Exception as e:
-        print(f"Error fetching trends: {e}")
+        print(f"90 Error fetching trends: {e}")
         return []
 
 
-# Create a function to store the trends in MongoDB
-def store_trends_in_db(trends, ip_address):
-    client = MongoClient(MONGO_URI)
-    db = client[DB_NAME]
-    collection = db['trending_topics']
-    
-    # Fill missing trends with placeholders if fewer than 5 are found
-    while len(trends) < 5:
-        trends.append('No data available')
-
-    unique_id = generate_unique_id()
-    
-    record = {
-        'unique_id': unique_id,
-        'trend': trends,
-        'date_time': datetime.now(),
-        'ip_address': ip_address
-    }
-    print(record)
-
-    collection.insert_one(record)
-    client.close()
 
 # Create a function to run the script and show the results
-def run_script_and_show_results():
+def run_script_and_show_results(username,password):
     # Download the ChromeDriver
-    driver = setup_driver_with_proxy()
+    # Setup driver with proxy
+    driver, proxy_ip = setup_driver_with_proxy()
 
 
     try:
         # Login to Twitter
-        login_to_twitter(driver)
+        login_to_twitter(driver,username,password)
 
         # Fetch trending topics
         trends = fetch_trending_topics(driver)
 
-        # Example IP address (we will use a placeholder here)
-        ip_address = "192.168.1.1"
+         # Get the public IP address of the system
+        ip_address = get_public_ip()
+        print('current ip',ip_address)
 
         # Store the trends in MongoDB
         store_trends_in_db(trends, ip_address)
@@ -131,8 +113,6 @@ def run_script_and_show_results():
                 "trend5": trends[4] if len(trends) > 4 else '',
             }
         }
-
-        print(f"Result to return: {result}")
 
         return result
     finally:

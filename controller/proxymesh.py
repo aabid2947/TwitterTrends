@@ -61,11 +61,11 @@ def create_proxy_extension(proxy_host, proxy_port, proxy_username, proxy_passwor
     );
     """
 
-    with open("manifest.json", "w") as f:
-        f.write(manifest_json)
+    # with open("controller/manifest.json", "w") as f:
+    #     f.write(manifest_json)
 
-    with open("background.js", "w") as f:
-        f.write(background_js)
+    # with open("controller/background.js", "w") as f:
+    #     f.write(background_js)
 
 def setup_driver_with_proxy():
     try:
@@ -73,6 +73,8 @@ def setup_driver_with_proxy():
         PROXY_PORT = os.getenv('PROXYMESH_PORT')
         PROXY_USERNAME = os.getenv('PROXYMESH_USERNAME')
         PROXY_PASSWORD = os.getenv('PROXYMESH_PASSWORD')
+
+
 
         create_proxy_extension(PROXY_HOST, PROXY_PORT, PROXY_USERNAME, PROXY_PASSWORD)
 
@@ -84,17 +86,20 @@ def setup_driver_with_proxy():
         chrome_options.add_argument('--disable-notifications')
         chrome_options.add_argument('--disable-infobars')
         chrome_options.add_argument('--disable-extensions')
-
+        chrome_options.add_argument('--headless')  # Run Chrome in headless mode
+        
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
         
-        return driver
+        proxy_ip = f"{PROXY_HOST}:{PROXY_PORT}"
+        return driver, proxy_ip
+
 
     except Exception as e:
         print(f"Driver setup error: {str(e)}")
         return None
 
-def login_to_twitter(driver):
+def login_to_twitter(driver,username,password):
     try:
         print("Starting Twitter login process...")
         driver.get('https://twitter.com/i/flow/login')
@@ -104,7 +109,7 @@ def login_to_twitter(driver):
         print("Entering username...")
         username_field = wait.until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, 'input[autocomplete="username"]')))
-        username_field.send_keys(os.getenv('TWITTER_USERNAME'))
+        username_field.send_keys(username)
         next_button = wait.until(EC.presence_of_element_located(
             (By.XPATH, "//span[text()='Next']")))
         next_button.click()
@@ -114,7 +119,7 @@ def login_to_twitter(driver):
         print("Entering password...")
         password_field = wait.until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, 'input[type="password"]')))
-        password_field.send_keys(os.getenv('TWITTER_PASSWORD'))
+        password_field.send_keys(password)
         login_button = wait.until(EC.presence_of_element_located(
             (By.XPATH, "//span[text()='Log in']")))
         login_button.click()
