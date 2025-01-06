@@ -35,7 +35,7 @@ This project is a web application that scrapes the top 5 trending topics from Tw
     pip install -r requirements.txt
     ```
 
-4. Create a [.env](http://_vscodecontentref_/0) file in the root directory with the following content:
+4. Create a .env file in the  directory with the following content:
     ```properties
     TWITTER_USERNAME=your_twitter_username
     TWITTER_PASSWORD=your_twitter_password
@@ -56,19 +56,21 @@ This project is a web application that scrapes the top 5 trending topics from Tw
 
 ## Usage
 
-- Click the "Run Script" button on the web interface to trigger the scraper.
+- Enter your Twitter username and password in the web interface and click the "Run Script" button to trigger the scraper.
 - The top 5 trending topics will be displayed along with the IP address used for the request and a JSON extract of the record from MongoDB.
 
 ## Project Structure
 
 ```plaintext
 twitter-trending-scraper/
+├── controller/
+│   ├── .env
+│   ├── MongodbCrud.py
+│   ├── proxymesh.py
+│   └── Twitter.py
 ├── templates/
 │   └── index.html
-├── .env
 ├── app.py
-├── proxymesh.py
-├── Twitter.py
-├── MongodbCrud.py
 ├── requirements.txt
+├── LICENSE
 └── README.md
