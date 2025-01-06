@@ -59,8 +59,7 @@ def fetch_trending_topics(driver):
 
                 # Simplified extraction of hashtags and post counts
                 lines = trend_text.split('\n')
-                print(lines[3])
-                # for i, line in enumerate(lines):
+         
                 trends.append(lines[3])
 
             # Scroll to load more content
