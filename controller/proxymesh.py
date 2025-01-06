@@ -75,7 +75,9 @@ def setup_driver_with_proxy():
         PROXY_PASSWORD = os.getenv('PROXYMESH_PASSWORD')
 
 
-
+        # Use rotating proxy endpoint
+        # PROXY_URL = f"http://{PROXY_USERNAME}:{PROXY_PASSWORD}@{PROXY_HOST}:{PROXY_PORT}"
+        
         create_proxy_extension(PROXY_HOST, PROXY_PORT, PROXY_USERNAME, PROXY_PASSWORD)
 
         chrome_options = Options()
@@ -87,6 +89,7 @@ def setup_driver_with_proxy():
         chrome_options.add_argument('--disable-infobars')
         chrome_options.add_argument('--disable-extensions')
         # chrome_options.add_argument('--headless')  # Run Chrome in headless mode
+        # chrome_options.add_argument(f'--proxy-server={PROXY_URL}')
         
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
