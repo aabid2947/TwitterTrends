@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trending Topics</title>
+  <style>
+    /* Optional: Style for hiding result initially */
+    #result {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Click here to run the script and get trending topics</h1>
+  <button id="run-script-btn">Run Script</button>
+
+  <div id="result">
+    <h2>These are the most happening topics as on <span id="timestamp"></span></h2>
+    <ul id="trends-list">
+      <!-- Trends will be added here dynamically -->
+    </ul>
+    <p>The IP address used for this query was <span id="ip-address"></span>.</p>
+    <h3>Here’s a JSON extract of this record from the MongoDB:</h3>
+    <pre id="json-output"></pre>
+  </div>
+
+  <script>
+    // Event listener for the button click
+    document.getElementById('run-script-btn').addEventListener('click', async function() {
+      // Make the request to fetch the script result
+      const response = await fetch('/run-script');
+      const result = await response.json();
+
+      console.log(result); // Log the result to the console
+
+      // Set timestamp and IP address
+      document.getElementById('timestamp').textContent = result.date_time;
+      document.getElementById('ip-address').textContent = result.ip_address;
+
+      // Add trends to the list dynamically
+      const trendsList = document.getElementById('trends-list');
+      result.trend.forEach(trend => {
+        console.log(trend);
+        const li = document.createElement('li');
+        li.textContent = trend;
+        trendsList.appendChild(li);
+      });
+
+      // Display the JSON of the record
+      document.getElementById('json-output').textContent = JSON.stringify(result.record_json, null, 2);
+
+      // Show the result section
+      document.getElementById('result').style.display = 'block';
+    });
+  </script>
+</body>
+</html>
